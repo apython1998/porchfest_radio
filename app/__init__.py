@@ -12,9 +12,10 @@ login = LoginManager()
 login.login_view = 'auth.login'
 bootstrap = Bootstrap()
 
+
 def create_app(config_class=Config):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(config_class)
 
     db.init_app(app)
     login.init_app(app)

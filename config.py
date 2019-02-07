@@ -10,3 +10,4 @@ class Config(object):
         'db': 'porchfest_radio',
         'host': 'mongodb://localhost/porchfest_radio'
     }
+    ADMINS = os.environ.get('ADMINS') or 'your.email@example.com'

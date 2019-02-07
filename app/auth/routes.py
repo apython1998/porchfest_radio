@@ -1,11 +1,9 @@
-import requests
-from flask import render_template, url_for, redirect, flash, request, jsonify
+from flask import render_template, url_for, redirect, flash, request
 from werkzeug.urls import url_parse
 from app import db
 from app.auth import bp
 from app.models import User
-from datetime import datetime, timedelta
-from flask_login import login_user, current_user, logout_user, login_required
+from flask_login import login_user, current_user, logout_user
 from app.auth.forms import LoginForm, RegistrationForm
 
 
@@ -26,6 +24,12 @@ def login():
             next_page = url_for('main.index')
         return redirect(next_page)
     return render_template('auth/login.html', title='Login', form=form)
+
+
+@bp.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('main.index'))
 
 
 @bp.route('/register', methods=['GET', 'POST'])
