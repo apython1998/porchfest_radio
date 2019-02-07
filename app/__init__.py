@@ -30,4 +30,4 @@ if not app.debug:
     app.logger.info('porchfest_BAG startup')
 
 
-from app import routes, models, errors
+from app import models, errors
