@@ -29,6 +29,7 @@ def login():
 @bp.route('/logout')
 def logout():
     logout_user()
+    flash('You have been logged out')
     return redirect(url_for('main.index'))
 
 
@@ -41,6 +42,7 @@ def register():
         user = User(username=form.username.data, email=form.email.data)
         user.set_password(form.password.data)
         user.save(cascade=True)
-        flash(_('Congratulations, you are now a registered user!'))
+        flash('Congratulations, you are now a registered user!')
+        login_user(user)
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', title='Register', form=form)

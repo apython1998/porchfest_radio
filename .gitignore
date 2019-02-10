@@ -122,3 +122,6 @@ dmypy.json
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Error Logs
+logs/
