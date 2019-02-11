@@ -6,14 +6,12 @@ from app.main import bp
 from app.models import User, Location, Artist, Show, Porch, Porchfest
 
 
-@bp.route('/reset_db')
-def reset_db():
-    db.connection.drop_database('porchfest_radio')
+def add_objects():
     times = [
-        datetime(2019, 12, 26, 9, 0, 0),  # start for porchfests
-        datetime(2019, 12, 26, 17, 0, 0),  # end for porchfests
-        datetime(2019, 12, 26, 12, 0, 0),  # first show end time
-        datetime(2019, 12, 26, 15, 0, 0)  # second show end time
+        datetime(2019, 6, 26, 9, 0, 0),  # start for porchfests
+        datetime(2019, 6, 26, 17, 0, 0),  # end for porchfests
+        datetime(2019, 6, 26, 12, 0, 0),  # first show end time
+        datetime(2019, 6, 26, 15, 0, 0)  # second show end time
     ]
     default_users = [
         User(username='ithaca1', email='ithaca1@email.com', member_of=[], follows=[]),
@@ -37,10 +35,10 @@ def reset_db():
     for porch in default_porches:
         porch.save(cascade=True)
     default_artists = [
-        Artist(email='artist1@email.com', name='Artist 1', description='artist 1 desc',
+        Artist(name='Artist 1', description='artist 1 desc',
                media_links=[], location=Location.objects(city='Ithaca', state='NY').first(),
                image='https://miquon.org/wp-content/uploads/2016/02/GenericUser.png'),
-        Artist(email='artist2@email.com', name='Artist 2', description='artist 2 desc',
+        Artist(name='Artist 2', description='artist 2 desc',
                media_links=[], location=Location.objects(city='Ithaca', state='NY').first(),
                image='https://miquon.org/wp-content/uploads/2016/02/GenericUser.png')
     ]
@@ -62,6 +60,17 @@ def reset_db():
     ]
     for porchfest in default_porchfests:
         porchfest.save(cascade=True)
+
+
+def make_user_connections():  # Used in reset_db() MUST CALL ADD_OBJECTS FIRST!!!
+    pass
+
+
+@bp.route('/reset_db')
+def reset_db():
+    db.connection.drop_database('porchfest_radio')
+    add_objects() # Add default objects
+    make_user_connections() # Add connections between Users and Artists
     flash("Database has been reset!")
     return redirect(url_for('main.index'))
 

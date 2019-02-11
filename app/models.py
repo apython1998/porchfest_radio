@@ -54,6 +54,7 @@ class Artist(db.Document):
     image = db.StringField()
     genre = db.StringField()
     members = db.ListField(db.ReferenceField(User))
+    followers = db.ListField(db.ReferenceField(User))
 
     def __repr__(self):
         return '<Artist {}>'.format(self.name)
