@@ -6,6 +6,46 @@ from app.main import bp
 from app.models import User, Location, Artist, Show, Porch, Porchfest
 
 
+# Adds a user to a band
+# user is of type User
+# artist is of type Artist
+def add_member(user, artist):
+    user.member_of.append(artist)  # Add artist to list of bands that user is part of
+    artist.members.append(user)  # Add user to list of members of a band
+    user.save(cascade=True)
+    artist.save(cascade=True)
+
+
+# Removes a user from a band
+# user is of type User
+# artist is of type Artist
+def remove_member(user, artist):
+    user.member_of.remove(artist)  # Remove artist from list of bands that user is part of
+    artist.members.remove(user)  # Remove user from list of members of a band
+    user.save(cascade=True)
+    artist.save(cascade=True)
+
+
+# Adds artist to user's follows list
+# user is of type User
+# artist is of type Artist
+def follow_band(user, artist):
+    user.follows.append(artist)  # Add artist to list of bands that user follows
+    artist.followers.append(user)  # Adds user to artist's list of followers
+    user.save(cascade=True)
+    artist.save(cascade=True)
+
+
+# Allows user to unfollow artist
+# user is of type User
+# artist is of type Artist
+def unfollow_band(user, artist):
+    user.follows.remove(artist)  # Remove artist from list of bands that user follows
+    artist.followers.remove(user)  # Remove user from artist's list of followers
+    user.save(cascade=True)
+    artist.save(cascade=True)
+
+
 def add_objects():
     times = [
         datetime(2019, 6, 26, 9, 0, 0),  # start for porchfests
@@ -62,15 +102,19 @@ def add_objects():
         porchfest.save(cascade=True)
 
 
-def make_user_connections():  # Used in reset_db() MUST CALL ADD_OBJECTS FIRST!!!
-    pass
+def make_default_user_connections():  # Used in reset_db() MUST CALL ADD_OBJECTS FIRST!!!
+    user1 = User.objects(username='ithaca1').first()
+    user2 = User.objects(username='ithaca2').first()
+    artist1 = Artist.objects(name='Artist 1').first()
+    add_member(user1, artist1)
+    follow_band(user2, artist1)
 
 
 @bp.route('/reset_db')
 def reset_db():
     db.connection.drop_database('porchfest_radio')
     add_objects() # Add default objects
-    make_user_connections() # Add connections between Users and Artists
+    make_default_user_connections() # Add connections between Users and Artists
     flash("Database has been reset!")
     return redirect(url_for('main.index'))
 

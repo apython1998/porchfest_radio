@@ -3,7 +3,7 @@ import unittest
 from app import create_app, db
 from app.models import User, Artist, Show, Porch, Porchfest, Location
 from config import Config
-from app.main.routes import add_objects, make_user_connections, reset_db
+from app.main.routes import add_objects, make_default_user_connections, reset_db
 
 
 class TestConfig(Config):
@@ -56,7 +56,7 @@ class ResetDBCase(unittest.TestCase):
     def test_make_user_connections(self):
         db.connection.drop_database('porchfest_radio_test')
         add_objects()
-        make_user_connections()
+        make_default_user_connections()
         u1 = User.objects(username='ithaca1').first()
         u2 = User.objects(username='ithaca2').first()
         a1 = Artist.objects(name='Artist 1').first()
