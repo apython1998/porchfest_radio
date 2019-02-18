@@ -123,3 +123,19 @@ def reset_db():
 @bp.route('/index')
 def index():
     return render_template('index.html')
+
+
+@bp.route('/profile/<username>')
+def profile(username):
+    user = User.objects(username=username).first_or_404()
+    return render_template('user.html',  user=user)
+
+
+@bp.route('/edit_profile/<username>')
+def edit_profile(username):
+    pass
+
+
+@bp.route('/artist/<artist_name>')
+def artist(artist_name):
+    pass
