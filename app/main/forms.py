@@ -8,10 +8,14 @@ from bson.objectid import ObjectId
 from datetime import datetime
 
 
-class EditUserForm(FlaskForm):
+class EditProfileForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Submit')
+
+    def __init__(self, original_username, *args, **kwargs):
+        super(EditProfileForm, self).__init__(*args, **kwargs)
+        self.original_username = original_username
 
     def validate_email(self, email):
         user = User.objects(email=email.data).first()

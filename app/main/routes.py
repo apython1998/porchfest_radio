@@ -4,6 +4,7 @@ from flask import render_template, url_for, redirect, flash, request, jsonify, c
 from flask_login import current_user, login_required
 from app.main import bp
 from app.models import User, Location, Artist, Show, Porch, Porchfest
+from app.main.forms import EditProfileForm
 
 
 # Adds a user to a band
@@ -126,16 +127,35 @@ def index():
 
 
 @bp.route('/profile/<username>')
+@login_required
 def profile(username):
     user = User.objects(username=username).first_or_404()
     return render_template('user.html',  user=user)
 
 
-@bp.route('/edit_profile/<username>')
-def edit_profile(username):
-    pass
+@bp.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    form = EditProfileForm(current_user.username)
+    if form.validate_on_submit():
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        current_user.save()
+        flash('Your changes have been saved.')
+        return redirect(url_for('main.edit_profile'))
+    elif request.method == 'GET':
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+    return render_template('edit_profile.html', title='Edit Profile',
+                           form=form)
 
 
 @bp.route('/artist/<artist_name>')
 def artist(artist_name):
+    pass
+
+
+@bp.route('/edit_artist/<artist_name>')
+@login_required
+def edit_artist(artist_name):
     pass
