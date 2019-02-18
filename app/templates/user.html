@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+<div class="col-md-12">
+    <div class="col-md-3">
+        <h1>Hello, {{ user.username }}</h1> <br>
+        <button href="{{ url_for("main.edit_profile") }}">Edit Profile</button>
+    </div>
+</div>
+<div class="col-md-12">
+    <div class="col-md-6">
+        <b><label for="member_table">Your bands:</label></b><br>
+             {% if member_of|length == 0 %}
+             <b>You are not a member of any bands at this time.</b>
+             {% else %}
+             <table id="member_table" class="table table-bordered bg-light table-hover">
+                {% for artist in member_of %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for("artist", artist_name=artist.name) }}">{{ artist.name }}</a>
+                    </td>
+                </tr>
+                {% endfor %}
+             </table>
+             {% endif %}
+    </div>
+    <div class="col-md-6">
+         <b><label for="follow_table">Your bands:</label></b><br>
+         {% if follows|length == 0 %}
+         <b>You are not following any bands at this time.</b>
+         {% else %}
+         <table id="follow_table" class="table table-bordered bg-light table-hover">
+            {% for artist in follows %}
+            <tr>
+                <td>
+                    <a href="{{ url_for("artist", artist_name=artist.name) }}">{{ artist.name }}</a>
+                </td>
+            </tr>
+            {% endfor %}
+         </table>
+         {% endif %}
+    </div>
+</div>
+{% endblock %}
