@@ -125,3 +125,6 @@ dmypy.json
 
 # Error Logs
 logs/
+
+# selenium drivers
+chromedriver
