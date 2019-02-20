@@ -3,8 +3,9 @@ from app import db
 from flask import render_template, url_for, redirect, flash, request, jsonify, current_app
 from flask_login import current_user, login_required
 from app.main import bp
-from app.models import User, Location, Artist, Show, Porch, Porchfest
-from app.main.forms import EditProfileForm
+from app.models import User, Location, Artist, Show, Porch, Porchfest, Genre
+from app.main.forms import EditProfileForm, CreateArtistForm
+from bson.objectid import ObjectId
 
 
 # Adds a user to a band
@@ -64,6 +65,7 @@ def add_objects():
         user.save(cascade=True)
     default_locations = [
         Location(city='Ithaca', state='NY', zip_code='14850'),
+        Location(city='Albany', state='NY', zip_code='12203'),
     ]
     for location in default_locations:
         location.save(cascade=True)
@@ -155,6 +157,26 @@ def artist(artist_name):
     artist = Artist.objects(name=artist_name).first_or_404()
     shows_for_artist = Show.objects(artist=artist, start_time__gt=datetime.utcnow)
     return render_template('artist.html', artist=artist, shows=shows_for_artist)
+
+
+@bp.route('/create_artist', methods=['GET', 'POST'])
+@login_required
+def create_artist():
+    form = CreateArtistForm()
+    form.location.choices = [(location.id, location.city + ', ' + location.state) for location in Location.objects()]
+    if form.validate_on_submit():
+        user = current_user
+        location = Location.objects(id=form.location.data).first()
+        genres = []
+        for genre_id in form.genre.data:
+            genres.append(Genre.objects(id=genre_id).first())
+        artist = Artist(name=form.name.data, description=form.description.data, location=location,
+                        genre=genres)
+        artist.save(cascade=True)
+        add_member(user, artist)
+        flash('Artist {} was created'.format(artist.name))
+        return redirect(url_for('main.artist', artist_name=artist.name))
+    return render_template('create_artist.html', form=form)
 
 
 @bp.route('/edit_artist/<artist_name>')
