@@ -9,6 +9,7 @@ class User(UserMixin, db.Document):
     username = db.StringField(unique=True)
     email = db.StringField(unique=True)
     password_hash = db.StringField()
+    name = db.StringField()
     member_of = db.ListField(db.ReferenceField('Artist'))
     follows = db.ListField(db.ReferenceField('Artist'))
 

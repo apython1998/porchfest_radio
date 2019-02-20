@@ -55,9 +55,9 @@ def add_objects():
         datetime(2019, 6, 26, 15, 0, 0)  # second show end time
     ]
     default_users = [
-        User(username='ithaca1', email='ithaca1@email.com', member_of=[], follows=[]),
-        User(username='ithaca2', email='ithaca2@email.com', member_of=[], follows=[]),
-        User(username='ithaca3', email='ithaca3@email.com', member_of=[], follows=[]),
+        User(username='ithaca1', email='ithaca1@email.com', name='Ithaca One', member_of=[], follows=[]),
+        User(username='ithaca2', email='ithaca2@email.com', name='Ithaca Two', member_of=[], follows=[]),
+        User(username='ithaca3', email='ithaca3@email.com', name='Ithaca Three', member_of=[], follows=[]),
     ]
     for user in default_users:
         user.set_password('default')
@@ -77,11 +77,9 @@ def add_objects():
         porch.save(cascade=True)
     default_artists = [
         Artist(name='Artist 1', description='artist 1 desc',
-               media_links=[], location=Location.objects(city='Ithaca', state='NY').first(),
-               image='https://miquon.org/wp-content/uploads/2016/02/GenericUser.png'),
+               location=Location.objects(city='Ithaca', state='NY').first()),
         Artist(name='Artist 2', description='artist 2 desc',
-               media_links=[], location=Location.objects(city='Ithaca', state='NY').first(),
-               image='https://miquon.org/wp-content/uploads/2016/02/GenericUser.png')
+               location=Location.objects(city='Ithaca', state='NY').first())
     ]
     for artist in default_artists:
         artist.save(cascade=True)
@@ -152,7 +150,9 @@ def edit_profile():
 
 @bp.route('/artist/<artist_name>')
 def artist(artist_name):
-    pass
+    artist = Artist.objects(name=artist_name).first_or_404()
+    shows_for_artist = Show.objects(artist=artist, start_time__gt=datetime.utcnow)
+    return render_template('artist.html', artist=artist, shows=shows_for_artist)
 
 
 @bp.route('/edit_artist/<artist_name>')
