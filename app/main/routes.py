@@ -5,7 +5,7 @@ from flask_login import current_user, login_required
 from app.main import bp
 from app.models import User, Location, Artist, Show, Porch, Porchfest, Genre
 from app.main.forms import EditProfileForm, CreateArtistForm
-from bson.objectid import ObjectId
+from selenium import webdriver
 
 
 # Adds a user to a band
@@ -111,9 +111,30 @@ def make_default_user_connections():  # Used in reset_db() MUST CALL ADD_OBJECTS
     follow_band(user2, artist1)
 
 
+def scrape_genres(url):
+    browser = webdriver.Chrome()
+    browser.get(url)
+    genres = []
+    genres_divs = browser.find_elements_by_class_name('hFvVJe')
+    for column in genres_divs:
+        genre_links = column.find_elements_by_tag_name('a')
+        for genre_link in genre_links:
+            genres.append(genre_link.text)
+    print(len(genres))
+    return genres
+
+
+def get_genres():  # Used in reset_db() to get genres using a google search
+    genre_list = scrape_genres('https://www.google.com/search?q=music+genres&rlz=1C5CHFA_enUS738US738&oq=music+genres&aqs=chrome..69i57j69i60j0l4.1688j0j7&sourceid=chrome&ie=UTF-8')
+    for genre in genre_list:
+        new_genre = Genre(name=genre)
+        new_genre.save(cascade=True)
+
+
 @bp.route('/reset_db')
 def reset_db():
     db.connection.drop_database('porchfest_radio')
+    get_genres() # Reset the genres for the system
     add_objects() # Add default objects
     make_default_user_connections() # Add connections between Users and Artists
     flash("Database has been reset!")
@@ -164,8 +185,9 @@ def artist(artist_name):
 def create_artist():
     form = CreateArtistForm()
     form.location.choices = [(location.id, location.city + ', ' + location.state) for location in Location.objects()]
+    form.genre.choices = [(genre.id, genre.name) for genre in Genre.objects.order_by('name')]
     if form.validate_on_submit():
-        user = current_user
+        user = User.objects(username=current_user.username).first()
         location = Location.objects(id=form.location.data).first()
         genres = []
         for genre_id in form.genre.data:
