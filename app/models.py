@@ -46,13 +46,15 @@ class Location(db.Document):
         return '<Location {}, {}>'.format(self.city, self.state)
 
 
+class Genre(db.Document):
+    name = db.StringField(unique=True)
+
+
 class Artist(db.Document):
     name = db.StringField(unique=True)
     description = db.StringField()
-    media_links = db.ListField(db.StringField())
     location = db.ReferenceField(Location)
-    image = db.StringField()
-    genre = db.StringField()
+    genre = db.ListField(db.ReferenceField(Genre))
     members = db.ListField(db.ReferenceField(User))
     followers = db.ListField(db.ReferenceField(User))
 
