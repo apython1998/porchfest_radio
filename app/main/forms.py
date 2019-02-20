@@ -9,6 +9,7 @@ from datetime import datetime
 
 
 class EditProfileForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Submit')

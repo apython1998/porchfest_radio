@@ -138,10 +138,12 @@ def edit_profile():
     if form.validate_on_submit():
         current_user.username = form.username.data
         current_user.email = form.email.data
+        current_user.name = form.name.data
         current_user.save()
         flash('Your changes have been saved.')
         return redirect(url_for('main.edit_profile'))
     elif request.method == 'GET':
+        form.name.data = current_user.name
         form.username.data = current_user.username
         form.email.data = current_user.email
     return render_template('edit_profile.html', title='Edit Profile',
