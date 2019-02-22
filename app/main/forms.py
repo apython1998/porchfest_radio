@@ -1,8 +1,8 @@
 from flask_wtf import FlaskForm
 from flask_login import current_user
-from wtforms import StringField, TextAreaField, SubmitField, PasswordField, BooleanField, SelectField, SelectMultipleField
-from wtforms.fields.html5 import DateTimeField, DateField, DateTimeLocalField
+from wtforms import StringField, TextAreaField, SubmitField, SelectField, SelectMultipleField, MultipleFileField
 from wtforms.validators import DataRequired, ValidationError, Email, EqualTo, length, URL, Optional
+from flask_wtf.file import FileRequired, FileAllowed
 from app.models import User, Artist, Location, Porch, Porchfest
 from bson.objectid import ObjectId
 from datetime import datetime
@@ -61,3 +61,12 @@ class EditArtistForm(FlaskForm):
     def validate_genre(self, genre):
         if len(genre.data) > 3:
             raise ValidationError('You can only select 3 genres for your band')
+
+
+class UploadTracksForm(FlaskForm):
+    tracks = MultipleFileField('Upload up to 3 Tracks', validators=[FileRequired(), FileAllowed('.mp3')])
+    upload = SubmitField('Upload')
+
+    def validate_tracks(self, tracks):
+        if len(tracks.data) > 3:
+            raise ValidationError('You are only allowed to upload 3 tracks')

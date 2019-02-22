@@ -4,7 +4,7 @@ from flask import render_template, url_for, redirect, flash, request, jsonify, c
 from flask_login import current_user, login_required
 from app.main import bp
 from app.models import User, Location, Artist, Show, Porch, Porchfest, Genre
-from app.main.forms import EditProfileForm, CreateArtistForm, EditArtistForm
+from app.main.forms import EditProfileForm, CreateArtistForm, EditArtistForm, UploadTracksForm
 from selenium import webdriver
 
 
@@ -120,12 +120,13 @@ def scrape_genres(url):
         genre_links = column.find_elements_by_tag_name('a')
         for genre_link in genre_links:
             genres.append(genre_link.text)
-    print(len(genres))
+    browser.quit()
     return genres
 
 
 def get_genres():  # Used in reset_db() to get genres using a google search
-    genre_list = scrape_genres('https://www.google.com/search?q=music+genres&rlz=1C5CHFA_enUS738US738&oq=music+genres&aqs=chrome..69i57j69i60j0l4.1688j0j7&sourceid=chrome&ie=UTF-8')
+    genre_list = scrape_genres('https://www.google.com/search?q=music+genres&rlz=1C5CHFA_enUS738US738&oq=music+' +
+                               'genres&aqs=chrome..69i57j69i60j0l4.1688j0j7&sourceid=chrome&ie=UTF-8')
     for genre in genre_list:
         new_genre = Genre(name=genre)
         new_genre.save(cascade=True)
@@ -225,3 +226,16 @@ def edit_artist(artist_name):
         form.genre.data = [genre.id for genre in artist.genre]
         form.location.data = artist.location.id
     return render_template('edit_artist.html', form=form, title='Edit {}'.format(artist.name))
+
+
+@bp.route('/upload_track/<artist_name>', methods=['GET', 'POST'])
+@login_required
+def upload_track(artist_name):
+    artist = Artist.objects(name=artist_name).first_or_404()
+    if current_user not in artist.members:
+        flash('You are not authorized to upload tracks for {}'.format(artist.name))
+        return redirect(url_for('main.artist', artist_name=artist.name))
+    form = UploadTracksForm()
+    if form.validate_on_submit():
+        pass
+    return render_template('upload_track.html', form=form, artist=artist, title='Upload Track')

@@ -7,6 +7,7 @@
             <h1>{{ artist.name }}</h1>
             {% if current_user.is_authenticated and current_user in artist.members %}
             <button class="btn btn-warning" onclick="location.href='{{ url_for("main.edit_artist", artist_name=artist.name) }}'">Edit Profile</button>
+            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.upload_track", artist_name=artist.name) }}'">Edit Profile</button>
             {% endif %}
             <br>
             <label for="members_list">Members:</label>
