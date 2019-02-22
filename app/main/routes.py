@@ -4,7 +4,7 @@ from flask import render_template, url_for, redirect, flash, request, jsonify, c
 from flask_login import current_user, login_required
 from app.main import bp
 from app.models import User, Location, Artist, Show, Porch, Porchfest, Genre
-from app.main.forms import EditProfileForm, CreateArtistForm
+from app.main.forms import EditProfileForm, CreateArtistForm, EditArtistForm
 from selenium import webdriver
 
 
@@ -144,14 +144,14 @@ def reset_db():
 @bp.route('/')
 @bp.route('/index')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', title='Porchfest')
 
 
 @bp.route('/profile/<username>')
 @login_required
 def profile(username):
     user = User.objects(username=username).first_or_404()
-    return render_template('user.html',  user=user)
+    return render_template('user.html',  user=user, title='{} Page'.format(username))
 
 
 @bp.route('/edit_profile', methods=['GET', 'POST'])
@@ -177,7 +177,7 @@ def edit_profile():
 def artist(artist_name):
     artist = Artist.objects(name=artist_name).first_or_404()
     shows_for_artist = Show.objects(artist=artist, start_time__gt=datetime.utcnow)
-    return render_template('artist.html', artist=artist, shows=shows_for_artist)
+    return render_template('artist.html', artist=artist, shows=shows_for_artist, title='{} Info'.format(artist.name))
 
 
 @bp.route('/create_artist', methods=['GET', 'POST'])
@@ -198,10 +198,30 @@ def create_artist():
         add_member(user, artist)
         flash('Artist {} was created'.format(artist.name))
         return redirect(url_for('main.artist', artist_name=artist.name))
-    return render_template('create_artist.html', form=form)
+    return render_template('create_artist.html', form=form, title='Create Artist')
 
 
-@bp.route('/edit_artist/<artist_name>')
+@bp.route('/edit_artist/<artist_name>', methods=['GET', 'POST'])
 @login_required
 def edit_artist(artist_name):
-    pass
+    artist = Artist.objects(name=artist_name).first_or_404()
+    if current_user not in artist.members:
+        flash('You are not authorized to edit {}\'s information'.format(artist.name))
+        return redirect(url_for('main.artist', artist_name=artist.name))
+    form = EditArtistForm()
+    form.location.choices = [(location.id, location.city + ', ' + location.state) for location in Location.objects()]
+    form.genre.choices = [(genre.id, genre.name) for genre in Genre.objects.order_by('name')]
+    if form.validate_on_submit():
+        artist.name = form.name.data
+        artist.description = form.description.data
+        artist.location = Location.objects(id=form.location.data).first()
+        artist.genre = [Genre.objects(id=genre).first() for genre in form.genre.data]
+        artist.save(cascade=True)
+        flash('{} Edits Complete'.format(artist.name))
+        return redirect(url_for('main.artist', artist_name=artist.name))
+    elif request.method == 'GET':
+        form.name.data = artist.name
+        form.description.data = artist.description
+        form.genre.data = [genre.id for genre in artist.genre]
+        form.location.data = artist.location.id
+    return render_template('edit_artist.html', form=form, title='Edit {}'.format(artist.name))
