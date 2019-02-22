@@ -51,6 +51,13 @@ class Genre(db.Document):
     name = db.StringField(unique=True)
 
 
+class Track(db.Document):
+    artist = db.ReferenceField('Artist')
+    title = db.StringField()
+    duration = db.IntField()
+    filepath = db.StringField(unique=True)
+
+
 class Artist(db.Document):
     name = db.StringField(unique=True)
     description = db.StringField()
@@ -58,6 +65,7 @@ class Artist(db.Document):
     genre = db.ListField(db.ReferenceField(Genre))
     members = db.ListField(db.ReferenceField(User))
     followers = db.ListField(db.ReferenceField(User))
+    tracks = db.ListField(db.ReferenceField(Track))
 
     def __repr__(self):
         return '<Artist {}>'.format(self.name)
