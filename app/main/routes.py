@@ -3,9 +3,11 @@ from app import db
 from flask import render_template, url_for, redirect, flash, request, jsonify, current_app
 from flask_login import current_user, login_required
 from app.main import bp
-from app.models import User, Location, Artist, Show, Porch, Porchfest, Genre
-from app.main.forms import EditProfileForm, CreateArtistForm, EditArtistForm, UploadTracksForm
+from app.models import User, Location, Artist, Show, Porch, Porchfest, Genre, Track
+from app.main.forms import EditProfileForm, CreateArtistForm, EditArtistForm, UploadTrackForm
+from werkzeug.utils import secure_filename
 from selenium import webdriver
+import os
 
 
 # Adds a user to a band
@@ -165,7 +167,7 @@ def edit_profile():
         current_user.name = form.name.data
         current_user.save()
         flash('Your changes have been saved.')
-        return redirect(url_for('main.edit_profile'))
+        return redirect(url_for('main.profile', username=current_user.username))
     elif request.method == 'GET':
         form.name.data = current_user.name
         form.username.data = current_user.username
@@ -228,6 +230,19 @@ def edit_artist(artist_name):
     return render_template('edit_artist.html', form=form, title='Edit {}'.format(artist.name))
 
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ['mp3', 'wav']
+
+
+def upload_file_to_s3(file, filepath):
+    pass
+
+
+@bp.route('/get_track/<track_name>')
+def get_track(track_name):
+    pass
+
+
 @bp.route('/upload_track/<artist_name>', methods=['GET', 'POST'])
 @login_required
 def upload_track(artist_name):
@@ -235,7 +250,19 @@ def upload_track(artist_name):
     if current_user not in artist.members:
         flash('You are not authorized to upload tracks for {}'.format(artist.name))
         return redirect(url_for('main.artist', artist_name=artist.name))
-    form = UploadTracksForm()
+    form = UploadTrackForm()
+    form.genre.choices = [(genre.id, genre.name) for genre in Genre.objects.order_by('name')]
     if form.validate_on_submit():
-        pass
+        file = form.track.data
+        if not allowed_file(file.filename):
+            flash('Only music files are allowed')
+            return render_template('upload_track.html', form=form, artist=artist, title='Upload Track')
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], file.filename)
+        new_track = Track(track_name=form.track_name.data, artist=artist, duration=0, genre=[Genre.objects(id=genre).first() for genre in form.genre.data], filepath=filepath)
+        new_track.save(cascade=True)  # Saves the track in the mongoDB
+        artist.tracks.append(new_track)
+        artist.save(cascade=True)  # Save artist with new track
+        file.save(filepath)
+        flash('Track successfully uploaded')
+        return redirect(url_for('main.artist', artist_name=artist_name))
     return render_template('upload_track.html', form=form, artist=artist, title='Upload Track')

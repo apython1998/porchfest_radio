@@ -53,8 +53,9 @@ class Genre(db.Document):
 
 class Track(db.Document):
     artist = db.ReferenceField('Artist')
-    title = db.StringField()
+    track_name = db.StringField(unique=True)
     duration = db.IntField()
+    genre = db.ListField(db.ReferenceField(Genre))
     filepath = db.StringField(unique=True)
 
 

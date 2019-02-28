@@ -1,11 +1,13 @@
 from flask_wtf import FlaskForm
 from flask_login import current_user
+from flask import current_app
 from wtforms import StringField, TextAreaField, SubmitField, SelectField, SelectMultipleField, MultipleFileField
-from wtforms.validators import DataRequired, ValidationError, Email, EqualTo, length, URL, Optional
-from flask_wtf.file import FileRequired, FileAllowed
-from app.models import User, Artist, Location, Porch, Porchfest
+from wtforms.validators import DataRequired, ValidationError, Email, EqualTo, length, URL, Optional, Regexp
+from flask_wtf.file import FileRequired, FileAllowed, FileField
+from app.models import User, Artist, Location, Porch, Porchfest, Track
 from bson.objectid import ObjectId
 from datetime import datetime
+import os
 
 
 class EditProfileForm(FlaskForm):
@@ -63,10 +65,20 @@ class EditArtistForm(FlaskForm):
             raise ValidationError('You can only select 3 genres for your band')
 
 
-class UploadTracksForm(FlaskForm):
-    tracks = MultipleFileField('Upload up to 3 Tracks', validators=[FileRequired(), FileAllowed('.mp3')])
+class UploadTrackForm(FlaskForm):
+    track_name = StringField('Track Name', validators=[DataRequired()])
+    genre = SelectMultipleField('Pick 3 Genres', validators=[DataRequired()], coerce=ObjectId)
+    track = FileField('Upload a Track', validators=[FileRequired(), FileAllowed(['mp3', 'wav'], 'Only Music Files')])
     upload = SubmitField('Upload')
 
-    def validate_tracks(self, tracks):
-        if len(tracks.data) > 3:
-            raise ValidationError('You are only allowed to upload 3 tracks')
+    def validate_track(self, track):
+        if Track.objects(filepath=os.path.join(current_app.config['UPLOAD_FOLDER'], track.data.filename)).first() is not None:
+            raise ValidationError('That file already exists')
+
+    def validate_track_name(self, track_name):
+        if Track.objects(track_name=track_name.data).first() is not None:
+            raise ValidationError('Track with that name already exists')
+
+    def validate_genre(self, genre):
+        if len(genre.data) > 3:
+            raise ValidationError('You can only select 3 genres for your band')

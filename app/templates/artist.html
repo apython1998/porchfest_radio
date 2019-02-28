@@ -7,7 +7,9 @@
             <h1>{{ artist.name }}</h1>
             {% if current_user.is_authenticated and current_user in artist.members %}
             <button class="btn btn-warning" onclick="location.href='{{ url_for("main.edit_artist", artist_name=artist.name) }}'">Edit Profile</button>
-            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.upload_track", artist_name=artist.name) }}'">Edit Profile</button>
+            {% if artist.tracks|length <= 3 %}
+            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.upload_track", artist_name=artist.name) }}'">Upload Tracks</button>
+            {% endif %}
             {% endif %}
             <br>
             <label for="members_list">Members:</label>
@@ -52,6 +54,22 @@
             <tr>
                 <td>
                     <b>{{ show.artist.name }} is playing at {{ show.porch.address }} {{ show.porch.location.city }}, {{ show.porch.location.state }} {{ show.start_time }}</b>
+                </td>
+            </tr>
+            {% endfor %}
+         </table>
+         {% endif %}
+     </div>
+     <div class="col-xs-6 text-center">
+         <b><label for="tracks_table">Tracks for {{ artist.name }}</label></b><br>
+         {% if artist.tracks|length == 0 %}
+         <b>{{ artist.name }} does not have any tracks at this time! Check back soon! :)</b>
+         {% else %}
+         <table id="tracks_table" class="table table-bordered bg-light table-hover">
+            {% for track in artist.tracks %}
+            <tr>
+                <td>
+                    <a href="{{ url_for("main.get_track", track_name=track.track_name) }}">{{ track.track_name }}</a>
                 </td>
             </tr>
             {% endfor %}
