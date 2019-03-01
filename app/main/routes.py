@@ -235,8 +235,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ['mp3', 'wav']
 
 
-def upload_file_to_s3(file, bucket_name, acl="public-read"):
-
+def upload_file_to_s3(file, bucket_name):
     try:
         s3 = boto3.client('s3', aws_access_key_id=current_app.config['S3_KEY'],
                           aws_secret_access_key=current_app.config['S3_SECRET'])
@@ -246,7 +245,6 @@ def upload_file_to_s3(file, bucket_name, acl="public-read"):
             bucket_name,
             file.filename,
             ExtraArgs={
-                "ACL": acl,
                 "ContentType": file.content_type
             }
         )
@@ -259,10 +257,13 @@ def upload_file_to_s3(file, bucket_name, acl="public-read"):
     return "{}{}".format(current_app.config["S3_LOCATION"], file.filename)
 
 
-
 @bp.route('/get_track/<track_name>')
 def get_track(track_name):
-    pass
+    track = Track.objects(track_name=track_name).first_or_404()
+    track_url = track.filepath
+    return jsonify({
+        'track_url': track_url
+    })
 
 
 @bp.route('/upload_track/<artist_name>', methods=['GET', 'POST'])
