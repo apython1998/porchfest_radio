@@ -82,3 +82,17 @@ class UploadTrackForm(FlaskForm):
     def validate_genre(self, genre):
         if len(genre.data) > 3:
             raise ValidationError('You can only select 3 genres for your band')
+
+
+class AddArtistMemberForm(FlaskForm):
+    username = StringField('Username of New Member', validators=[DataRequired()])
+    confirm_username = StringField('Confirm Username of New Member', validators=[DataRequired(), EqualTo('username')])
+    submit = SubmitField('Add Member')
+
+    def validate_username(self, username):
+        user = User.objects(username=username.data).first()
+        cur_user = current_user
+        if user is None:
+            raise ValidationError('User with that username doesn\'t exist!')
+        if user.username == cur_user.username:
+            raise ValidationError('You cannot add yourself to your band!')

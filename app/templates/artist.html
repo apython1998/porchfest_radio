@@ -10,6 +10,8 @@
             {% if artist.tracks|length <= 3 %}
             <button class="btn btn-warning" onclick="location.href='{{ url_for("main.upload_track", artist_name=artist.name) }}'">Upload Tracks</button>
             {% endif %}
+            <br>
+            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.add_artist_member", artist_name=artist.name) }}'">Add Members</button>
             {% endif %}
             <br>
             <label for="members_list">Members:</label>
@@ -77,5 +79,4 @@
          {% endif %}
      </div>
 </div>
-
 {% endblock %}

@@ -4,7 +4,7 @@ from flask import render_template, url_for, redirect, flash, request, jsonify, c
 from flask_login import current_user, login_required
 from app.main import bp
 from app.models import User, Location, Artist, Show, Porch, Porchfest, Genre, Track
-from app.main.forms import EditProfileForm, CreateArtistForm, EditArtistForm, UploadTrackForm
+from app.main.forms import EditProfileForm, CreateArtistForm, EditArtistForm, UploadTrackForm, AddArtistMemberForm
 from werkzeug.utils import secure_filename
 from selenium import webdriver
 import os
@@ -300,3 +300,26 @@ def upload_track(artist_name):
             flash('Error uploading file')
             return render_template('upload_track.html', form=form, artist=artist, title='Upload Track')
     return render_template('upload_track.html', form=form, artist=artist, title='Upload Track')
+
+
+@bp.route('/add_member/<artist_name>', methods=['GET', 'POST'])
+@login_required
+def add_artist_member(artist_name):
+    artist = Artist.objects(name=artist_name).first_or_404()
+    if current_user not in artist.members:
+        flash('You are not authorized to add members to {}'.format(artist.name))
+        return redirect(url_for('main.artist', artist_name=artist.name))
+    form = AddArtistMemberForm()
+    if form.validate_on_submit():
+        new_member = User.objects(username=form.username.data).first()
+        cur_user = current_user
+        if new_member is None:
+            flash('User with that username does not exist!')
+            return render_template('add_artist_member.html', form=form, artist=artist, title='Add Member')
+        elif new_member.username == cur_user.username:
+            flash('Cannot add yourself to your band!')
+            return render_template('add_artist_member.html', form=form, artist=artist, title='Add Member')
+        else:
+            add_member(new_member, artist)
+            return redirect(url_for('main.artist', artist_name=artist_name))
+    return render_template('add_artist_member.html', form=form, artist=artist, title='Add Member')
