@@ -312,15 +312,15 @@ def add_artist_member(artist_name):
     form = AddArtistMemberForm()
     if form.validate_on_submit():
         new_member = User.objects(username=form.username.data).first()
-        cur_user = current_user
         if new_member is None:
             flash('User with that username does not exist!')
             return render_template('add_artist_member.html', form=form, artist=artist, title='Add Member')
-        elif new_member.username == cur_user.username:
+        elif new_member.username == current_user.username:
             flash('Cannot add yourself to your band!')
             return render_template('add_artist_member.html', form=form, artist=artist, title='Add Member')
         else:
             add_member(new_member, artist)
+            flash('Added {} to {}'.format(new_member.username, artist.name))
             return redirect(url_for('main.artist', artist_name=artist_name))
     return render_template('add_artist_member.html', form=form, artist=artist, title='Add Member')
 
@@ -328,10 +328,28 @@ def add_artist_member(artist_name):
 @bp.route('/follow/<artist_name>')
 @login_required
 def follow_artist(artist_name):
-    pass
+    artist = Artist.objects(name=artist_name).first_or_404()
+    user = User.objects(username=current_user.username).first()
+    if artist is None:
+        flash('Artist {} does not exist!'.format(artist_name))
+    elif current_user in artist.followers:
+        flash('You are already following {}'.format(artist.name))
+    else:
+        follow_band(user, artist)
+        flash('Successfully followed {}'.format(artist.name))
+    return redirect(url_for('main.artist', artist_name=artist.name))
 
 
 @bp.route('/unfollow/<artist_name>')
 @login_required
 def unfollow_artist(artist_name):
-    pass
+    artist = Artist.objects(name=artist_name).first_or_404()
+    user = User.objects(username=current_user.username).first()
+    if artist is None:
+        flash('Artist {} does not exist!'.format(artist_name))
+    elif current_user not in artist.followers:
+        flash('You are not currently following {}'.format(artist.name))
+    else:
+        unfollow_band(user, artist)
+        flash('Successfully unfollowed {}'.format(artist.name))
+    return redirect(url_for('main.artist', artist_name=artist.name))
