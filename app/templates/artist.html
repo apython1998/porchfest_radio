@@ -6,18 +6,17 @@
         <div class="col-xs-12">
             <h1>{{ artist.name }}</h1>
             {% if current_user.is_authenticated and current_user not in artist.followers %}
-            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.follow_artist", artist_name=artist.name) }}'">Follow</button>
+            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.follow_artist", artist_name=artist.name) }}'">Follow</button><br>
             {% elif current_user.is_authenticated and current_user in artist.followers %}
-            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.unfollow_artist", artist_name=artist.name) }}'">Unfollow</button>
+            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.unfollow_artist", artist_name=artist.name) }}'">Unfollow</button><br>
             {% endif %}
             {% if current_user.is_authenticated and current_user in artist.members %}
-            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.edit_artist", artist_name=artist.name) }}'">Edit Profile</button>
+            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.edit_artist", artist_name=artist.name) }}'">Edit Profile</button><br>
             {% if artist.tracks|length <= 3 %}
-            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.upload_track", artist_name=artist.name) }}'">Upload Tracks</button>
+            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.upload_track", artist_name=artist.name) }}'">Upload Tracks</button><br>
             {% endif %}
-            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.add_artist_member", artist_name=artist.name) }}'">Add Members</button>
+            <button class="btn btn-warning" onclick="location.href='{{ url_for("main.add_artist_member", artist_name=artist.name) }}'">Add Members</button><br>
             {% endif %}
-            <br>
             <label for="members_list">Members:</label>
             <ul id="members_list">
                 {% if artist.members|length == 0 %}
