@@ -323,3 +323,15 @@ def add_artist_member(artist_name):
             add_member(new_member, artist)
             return redirect(url_for('main.artist', artist_name=artist_name))
     return render_template('add_artist_member.html', form=form, artist=artist, title='Add Member')
+
+
+@bp.route('/follow/<artist_name>')
+@login_required
+def follow_artist(artist_name):
+    pass
+
+
+@bp.route('/unfollow/<artist_name>')
+@login_required
+def unfollow_artist(artist_name):
+    pass
