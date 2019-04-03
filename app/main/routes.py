@@ -7,8 +7,7 @@ from app.models import User, Location, Artist, Show, Porch, Porchfest, Genre, Tr
 from app.main.forms import EditProfileForm, CreateArtistForm, EditArtistForm, UploadTrackForm, AddArtistMemberForm
 from werkzeug.utils import secure_filename
 from selenium import webdriver
-import os
-import boto3, botocore
+import boto3
 
 
 # Adds a user to a band
@@ -236,6 +235,7 @@ def allowed_file(filename):
 
 
 def upload_file_to_s3(file, bucket_name):
+    filename = file.filename
     try:
         s3 = boto3.client('s3', aws_access_key_id=current_app.config['S3_KEY'],
                           aws_secret_access_key=current_app.config['S3_SECRET'])
@@ -243,9 +243,10 @@ def upload_file_to_s3(file, bucket_name):
         s3.upload_fileobj(
             file,
             bucket_name,
-            file.filename,
+            filename,
             ExtraArgs={
-                "ContentType": file.content_type
+                "ContentType": file.content_type,
+                'ACL': 'public-read'
             }
         )
 
@@ -254,7 +255,8 @@ def upload_file_to_s3(file, bucket_name):
         print("Error uploading file: ", e)
         return None
 
-    return "{}{}".format(current_app.config["S3_LOCATION"], file.filename)
+    return "{}{}".format(current_app.config["S3_LOCATION"], filename), \
+           "http://{}{}".format(current_app.config["CLOUDFRONT_URL"], filename)
 
 
 @bp.route('/get_track/<track_name>')
@@ -281,10 +283,12 @@ def upload_track(artist_name):
             flash('Only music files are allowed')
             return render_template('upload_track.html', form=form, artist=artist, title='Upload Track')
         file.filename = secure_filename(file.filename)
-        s3_filepath = upload_file_to_s3(file, current_app.config['S3_BUCKET'])
-        if s3_filepath is not None:
+        s3_filepath, cloudfront_filepath = upload_file_to_s3(file, current_app.config['S3_BUCKET'])
+        track_exists = Track.objects(s3_filepath=s3_filepath, cloudfront_filepath=cloudfront_filepath).first() is not None  # 1 if track exists
+        if s3_filepath is not None and cloudfront_filepath is not None and not track_exists:
             new_track = Track(track_name=form.track_name.data, artist=artist, duration=0,
-                              genre=[Genre.objects(id=genre).first() for genre in form.genre.data], filepath=s3_filepath)
+                              genre=[Genre.objects(id=genre).first() for genre in form.genre.data],
+                              s3_filepath=s3_filepath, cloudfront_filepath=cloudfront_filepath)
             new_track.save(cascade=True)  # Saves the track in the mongoDB
 
             # filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], file.filename)
@@ -297,8 +301,12 @@ def upload_track(artist_name):
             flash('Track successfully uploaded')
             return redirect(url_for('main.artist', artist_name=artist_name))
         else:
-            flash('Error uploading file')
-            return render_template('upload_track.html', form=form, artist=artist, title='Upload Track')
+            if track_exists:
+                flash('Track already exists!')
+                return render_template('upload_track.html', form=form, artist=artist, title='Upload Track')
+            else:
+                flash('Error uploading file')
+                return render_template('upload_track.html', form=form, artist=artist, title='Upload Track')
     return render_template('upload_track.html', form=form, artist=artist, title='Upload Track')
 
 
