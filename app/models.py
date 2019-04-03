@@ -56,7 +56,8 @@ class Track(db.Document):
     track_name = db.StringField(unique=True)
     duration = db.IntField()
     genre = db.ListField(db.ReferenceField(Genre))
-    filepath = db.StringField(unique=True)
+    s3_filepath = db.StringField(unique=True)
+    cloudfront_filepath = db.StringField(unique=True)
 
 
 class Artist(db.Document):

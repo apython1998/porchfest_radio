@@ -68,11 +68,11 @@ class EditArtistForm(FlaskForm):
 class UploadTrackForm(FlaskForm):
     track_name = StringField('Track Name', validators=[DataRequired()])
     genre = SelectMultipleField('Pick 3 Genres', validators=[DataRequired()], coerce=ObjectId)
-    track = FileField('Upload a Track', validators=[FileRequired(), FileAllowed(['mp3', 'wav'], 'Only Music Files')])
+    track = FileField('Upload a Track', validators=[FileRequired(), FileAllowed(['mp3'], 'Only Music Files')])
     upload = SubmitField('Upload')
 
     def validate_track(self, track):
-        if Track.objects(filepath=os.path.join(current_app.config['UPLOAD_FOLDER'], track.data.filename)).first() is not None:
+        if Track.objects(s3_filepath=os.path.join(current_app.config['UPLOAD_FOLDER'], track.data.filename)).first() is not None:
             raise ValidationError('That file already exists')
 
     def validate_track_name(self, track_name):
