@@ -96,3 +96,7 @@ class AddArtistMemberForm(FlaskForm):
             raise ValidationError('User with that username doesn\'t exist!')
         if user.username == cur_user.username:
             raise ValidationError('You cannot add yourself to your band!')
+
+
+class FindAPorchfestForm(FlaskForm):
+    porchfest = SelectField('Choose a Porchfest', validators=[DataRequired()], id='select_porchfest')

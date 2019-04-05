@@ -28,12 +28,13 @@
             </div>
             <div class="collapse navbar-collapse">
                 <ul class="nav navbar-nav navbar-right">
+                    <li><a href="{{ url_for('main.find_a_porchfest') }}">Find a Porchfest</a></li>
                     {% if current_user.is_anonymous %}
-                        <a class="navbar-brand navbar-default" href="{{ url_for('auth.login') }}">Login</a>
+                        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
                     {% else %}
-                        <a class="navbar-brand navbar-default" href="{{ url_for('main.create_artist') }}">Create Artist</a>
-                        <a class="navbar-brand navbar-default" href="{{ url_for('main.profile', username=current_user.username) }}">Profile</a>
-                        <a class="navbar-brand navbar-default" href="{{ url_for('auth.logout') }}">Logout</a>
+                        <li><a href="{{ url_for('main.create_artist') }}">Create Artist</a></li>
+                        <li><a href="{{ url_for('main.profile', username=current_user.username) }}">Profile</a></li>
+                        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
                     {% endif %}
                 </ul>
             </div>

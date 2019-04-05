@@ -4,7 +4,8 @@ from flask import render_template, url_for, redirect, flash, request, jsonify, c
 from flask_login import current_user, login_required
 from app.main import bp
 from app.models import User, Location, Artist, Show, Porch, Porchfest, Genre, Track
-from app.main.forms import EditProfileForm, CreateArtistForm, EditArtistForm, UploadTrackForm, AddArtistMemberForm
+from app.main.forms import EditProfileForm, CreateArtistForm, EditArtistForm, UploadTrackForm, AddArtistMemberForm,\
+    FindAPorchfestForm
 from werkzeug.utils import secure_filename
 from selenium import webdriver
 import boto3
@@ -61,6 +62,7 @@ def add_objects():
         User(username='ithaca1', email='ithaca1@email.com', name='Ithaca One', member_of=[], follows=[]),
         User(username='ithaca2', email='ithaca2@email.com', name='Ithaca Two', member_of=[], follows=[]),
         User(username='ithaca3', email='ithaca3@email.com', name='Ithaca Three', member_of=[], follows=[]),
+        User(username='albany1', email='albany1@email.com', name='Albany One', member_of=[], follows=[])
     ]
     for user in default_users:
         user.set_password('default')
@@ -75,7 +77,9 @@ def add_objects():
         Porch(name='Ithaca Porch 1', email='ithacaPorch1@email.com', address='953 Danby Rd',
               location=Location.objects(city='Ithaca', state='NY').first(), time_slots=[times[2], times[3]]),
         Porch(name='Ithaca Porch 2', email='ithacaPorch2@email.com', address='123 Ithaca Rd',
-              location=Location.objects(city='Ithaca', state='NY').first(), time_slots=[times[0], times[1], times[3]])
+              location=Location.objects(city='Ithaca', state='NY').first(), time_slots=[times[0], times[1], times[3]]),
+        Porch(name='Albany Porch 1', email='albanyPorch1@email.com', address='1200 Western Ave',
+              location=Location.objects(city='Albany', state='NY').first(), time_slots=[times[0], times[1], times[2], times[3]])
     ]
     for porch in default_porches:
         porch.save(cascade=True)
@@ -83,7 +87,9 @@ def add_objects():
         Artist(name='Artist 1', description='artist 1 desc',
                location=Location.objects(city='Ithaca', state='NY').first()),
         Artist(name='Artist 2', description='artist 2 desc',
-               location=Location.objects(city='Ithaca', state='NY').first())
+               location=Location.objects(city='Ithaca', state='NY').first()),
+        Artist(name='Artist 3', description='artist 3 desc',
+               location=Location.objects(city='Albany', state='NY').first())
     ]
     for artist in default_artists:
         artist.save(cascade=True)
@@ -91,7 +97,9 @@ def add_objects():
         Show(artist=Artist.objects(name='Artist 1').first(), porch=Porch.objects(name='Ithaca Porch 1').first(),
              start_time=times[0], end_time=times[2]),
         Show(artist=Artist.objects(name='Artist 2').first(), porch=Porch.objects(name='Ithaca Porch 2').first(),
-             start_time=times[2], end_time=times[3])
+             start_time=times[2], end_time=times[3]),
+        Show(artist=Artist.objects(name='Artist 3').first(), porch=Porch.objects(name='Albany Porch 1').first(),
+             start_time=times[0], end_time=times[2])
     ]
     for show in default_shows:
         show.save(cascade=True)
@@ -99,7 +107,10 @@ def add_objects():
         Porchfest(location=Location.objects(city='Ithaca', state='NY').first(), start_time=times[0], end_time=times[1],
                   porches=[Porch.objects(name='Ithaca Porch 1').first(), Porch.objects(name='Ithaca Porch 2').first()],
                   shows=[Show.objects(artist=Artist.objects(name='Artist 1').first()).first(),
-                         Show.objects(porch=Porch.objects(name='Ithaca Porch 2').first()).first()])
+                         Show.objects(porch=Porch.objects(name='Ithaca Porch 2').first()).first()]),
+        Porchfest(location=Location.objects(city='Albany', state='NY').first(), start_time=times[0], end_time=times[1],
+                  porches=[Porch.objects(name='Albany Porch 1').first()],
+                  shows=[Show.objects(artist=Artist.objects(name='Artist 3').first()).first()])
     ]
     for porchfest in default_porchfests:
         porchfest.save(cascade=True)
@@ -108,8 +119,11 @@ def add_objects():
 def make_default_user_connections():  # Used in reset_db() MUST CALL ADD_OBJECTS FIRST!!!
     user1 = User.objects(username='ithaca1').first()
     user2 = User.objects(username='ithaca2').first()
+    user3 = User.objects(username='albany1').first()
+    albany_artist = Artist.objects(name='Artist 3').first()
     artist1 = Artist.objects(name='Artist 1').first()
     add_member(user1, artist1)
+    add_member(user3, albany_artist)
     follow_band(user2, artist1)
 
 
@@ -361,3 +375,45 @@ def unfollow_artist(artist_name):
         unfollow_band(user, artist)
         flash('Successfully unfollowed {}'.format(artist.name))
     return redirect(url_for('main.artist', artist_name=artist.name))
+
+
+@bp.route('/find_a_porchfest')
+def find_a_porchfest():
+    default = Porchfest.objects(location=Location.objects(zip_code='14850').first()).first()
+    form = FindAPorchfestForm(porchfest=default.id)
+    form.porchfest.choices = [("", "---")] + [(p.id,
+                                           p.location.city + ", " + p.location.state + " " + p.start_time.strftime(
+                                               "%m-%d-%Y %H:%M") + " to " + p.end_time.strftime("%m-%d-%Y %H:%M")) for p
+                                          in Porchfest.objects()]
+    return render_template('find_a_porchfest.html', form=form)
+
+
+# Porchfest Page Stuff
+@bp.route('/_artists_for_porchfest')  # restful lookup for findaporchfest page
+def artists_for_porchfest():
+    porchfest_id = request.args.get('porchfestID', '')
+    porchfest = Porchfest.objects.get(id=porchfest_id)
+    porchfest_artists = []
+    for show in porchfest.shows:
+        artist_name = show.artist.name
+        if artist_name not in porchfest_artists:
+            porchfest_artists.append(artist_name)
+    return jsonify(porchfest_artists)
+
+
+@bp.route('/porchfest_playlist/<porchfest_id>')
+def porchfest_playlist(porchfest_id):                    # Get tracks for every artist performing at specified Porchfest
+    porchfest = Porchfest.objects.get(id=porchfest_id)
+    porchfest_tracks = []
+    porchfest_artist_names = []
+    for show in porchfest.shows:
+        artist_name = show.artist.name
+        if artist_name not in porchfest_artist_names:
+            porchfest_artist_names.append(artist_name)
+    porchfest_artists = []
+    for porchfest_artist_name in porchfest_artist_names:
+        porchfest_artists.append(Artist.objects(name=porchfest_artist_name).first())
+    for artist in porchfest_artists:
+        for track in artist.tracks:
+            if track not in porchfest_tracks:
+                porchfest_tracks.append(track)
