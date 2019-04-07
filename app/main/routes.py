@@ -333,12 +333,13 @@ def add_artist_member(artist_name):
         return redirect(url_for('main.artist', artist_name=artist.name))
     form = AddArtistMemberForm()
     if form.validate_on_submit():
+        for member in artist.members:
+            if form.username.data == member.username:
+                flash('Cannot add a current member to your band!')
+                return render_template('add_artist_member.html', form=form, artist=artist, title='Add Member')
         new_member = User.objects(username=form.username.data).first()
         if new_member is None:
             flash('User with that username does not exist!')
-            return render_template('add_artist_member.html', form=form, artist=artist, title='Add Member')
-        elif new_member.username == current_user.username:
-            flash('Cannot add yourself to your band!')
             return render_template('add_artist_member.html', form=form, artist=artist, title='Add Member')
         else:
             add_member(new_member, artist)
@@ -417,3 +418,4 @@ def porchfest_playlist(porchfest_id):                    # Get tracks for every 
         for track in artist.tracks:
             if track not in porchfest_tracks:
                 porchfest_tracks.append(track)
+    return render_template('porchfest_radio.html', tracks=porchfest_tracks, porchfest=porchfest)
