@@ -25,7 +25,7 @@
                                 <p>{{ track.track_name }} - <a href="{{ url_for('main.artist', artist_name=track.artist.name) }}">{{ track.artist.name }}</a></p>
                             </div>
                             <div class="col-xs-9">
-                                <audio id="{{ track.s3_filepath }}">
+                                <audio id="{{ track.s3_filepath }}" controls>
                                     <source src="{{ track.s3_filepath }}" type="audio/mpeg">
                                     Your browser does not support the audio element.
                                 </audio>
@@ -40,27 +40,29 @@
     </div>
 {% endblock %}
 {% block scripts %}
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-    <script type="text/javascript" charset="utf-8">
-    $(document).click(function () {
-        var track_s3s = [];
-        {% for track in tracks %}
-        track_s3s.push("{{ track.s3_filepath }}");
-        {% endfor %}
-        var current_track = track_s3s.shift();
-        var audio_element = document.getElementById(current_track);
-        audio_element.onended = function() {
-            alert("Song over");
-        };
-        var promise = audio_element.play();
-
-        if (promise !== undefined) {
-            promise.then(_ => {
-                alert('Playing')
-            }).catch(error => {
-                alert(error)
-            });
-        }
-    });
-    </script>
+{#    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>#}
+{#    <script type="text/javascript" charset="utf-8">#}
+{#    $(document).ready(function () {#}
+{#        var track_s3s = [];#}
+{#        {% for track in tracks %}#}
+{#        track_s3s.push("{{ track.s3_filepath }}");#}
+{#        {% endfor %}#}
+{#        while (track_s3s.length > 0) {#}
+{#            var current_track = track_s3s.shift();#}
+{#            var audio_element = document.getElementById(current_track);#}
+{#            audio_element.onended = function () {#}
+{#                alert("Song over");#}
+{#            };#}
+{#            var promise = audio_element.play();#}
+{##}
+{#            if (promise !== undefined) {#}
+{#                promise.then(_ => {#}
+{#                    alert('Playing')#}
+{#                }).catch(error => {#}
+{#                    alert(error)#}
+{#                });#}
+{#            }#}
+{#        }#}
+{#    });#}
+{#    </script>#}
 {% endblock %}
