@@ -13,16 +13,19 @@
         {% else %}
         <div class="col-xs-8 col-xs-offset-2">
             <h1>Checkout these great tracks by your {{ porchfest.location.city }} Porchfest Artists!</h1>
+            <div class="col-xs-12">
+                <h3 id="now_playing"></h3>
+            </div>
             <table id="tracks_table" class="table table-bordered bg-light table-hover">
                 {% for track in tracks %}
                 <tr>
                     <td>
                         <div class="col-xs-12">
                             <div class="col-xs-3">
-                                <p>{{ track.track_name }} - {{ track.artist.name }}</p>
+                                <p>{{ track.track_name }} - <a href="{{ url_for('main.artist', artist_name=track.artist.name) }}">{{ track.artist.name }}</a></p>
                             </div>
                             <div class="col-xs-9">
-                                <audio controls>
+                                <audio id="{{ track.s3_filepath }}" controls>
                                     <source src="{{ track.s3_filepath }}" type="audio/mpeg">
                                     Your browser does not support the audio element.
                                 </audio>
@@ -35,4 +38,31 @@
         </div>
         {% endif %}
     </div>
+{% endblock %}
+{% block scripts %}
+{#    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>#}
+{#    <script type="text/javascript" charset="utf-8">#}
+{#    $(document).ready(function () {#}
+{#        var track_s3s = [];#}
+{#        {% for track in tracks %}#}
+{#        track_s3s.push("{{ track.s3_filepath }}");#}
+{#        {% endfor %}#}
+{#        while (track_s3s.length > 0) {#}
+{#            var current_track = track_s3s.shift();#}
+{#            var audio_element = document.getElementById(current_track);#}
+{#            audio_element.onended = function () {#}
+{#                alert("Song over");#}
+{#            };#}
+{#            var promise = audio_element.play();#}
+{##}
+{#            if (promise !== undefined) {#}
+{#                promise.then(_ => {#}
+{#                    alert('Playing')#}
+{#                }).catch(error => {#}
+{#                    alert(error)#}
+{#                });#}
+{#            }#}
+{#        }#}
+{#    });#}
+{#    </script>#}
 {% endblock %}
